@@ -127,6 +127,34 @@ workout-app/
 10. Docker Compose to run the whole thing with one command
 11. (Stretch) Add auth (JWT) so it's multi-user-ready — good "v2" talking point in interviews
 
+## Local development
+
+Prerequisites: Docker (with Compose v2), Go, and the golang-migrate CLI:
+
+```sh
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```
+
+Setup:
+
+```sh
+cp .env.example .env      # all config comes from env: DATABASE_URL, PORT, POSTGRES_*
+make db-up                # start Postgres 16 and wait for the healthcheck
+make migrate-up           # create the schema and seed the exercise library
+```
+
+Common commands (`make help` lists everything):
+
+| Task | make | Without make |
+|---|---|---|
+| Start Postgres | `make db-up` | `docker compose up -d --wait db` |
+| Stop Postgres | `make db-down` | `docker compose down` |
+| Wipe DB volume | `make db-reset` | `docker compose down -v` |
+| psql shell | `make psql` | `docker compose exec db psql -U $POSTGRES_USER -d $POSTGRES_DB` |
+| Migrate up | `make migrate-up` | `migrate -path backend/migrations -database "$DATABASE_URL" up` |
+| Roll back one | `make migrate-down` | `migrate -path backend/migrations -database "$DATABASE_URL" down 1` |
+| New migration | `make migrate-new name=add_x` | `migrate create -ext sql -dir backend/migrations -seq -digits 6 add_x` |
+
 ## Future / stretch ideas
 - Auth + multi-user support
 - Personal records (auto-detect PRs when a set beats a previous best)
